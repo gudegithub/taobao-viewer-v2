@@ -5,3 +5,9 @@
 # React Router
 /.react-router/
 /build/
+
+# Test Coverage
+/coverage/
+
+# Lock files (using npm)
+pnpm-lock.yaml

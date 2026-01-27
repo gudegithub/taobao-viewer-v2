@@ -1,0 +1,214 @@
+/**
+ * Copyright 2023 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { RapidApiService, type RapidApiRequestDto } from './rapidApi.server';
+import type {
+  V40ItemDetailResponseDto,
+  Taobao1688ItemDetailResponseDto,
+  Taobao1688SkuInfoResponseDto,
+} from '../types/taobao1688Api.dto';
+import type {
+  CommonTaobaoItemDto,
+  CommonSkuItem,
+  PropertyOption,
+} from '../types/common.dto';
+
+/**
+ * V40 APIレスポンスを共通DTOに変換
+ */
+export function convertV40ToCommon(
+  v40: V40ItemDetailResponseDto
+): CommonTaobaoItemDto {
+  if (!v40.data) {
+    console.error('v40.data is undefined. Full response:', v40);
+    throw new Error('Invalid v40 response: data is missing');
+  }
+
+  const skus: CommonSkuItem[] = (v40.data.skuVoList || []).map((sku) => {
+    const properties: PropertyOption[] = sku.skuAttr.map((attr) => {
+      return {
+        propertyId: attr.code,
+        valueId: attr.enumValue,
+        propertyName: attr.name,
+        value: attr.enumValue,
+      };
+    });
+
+    return {
+      skuId: sku.skuNo,
+      price: sku.price,
+      originalPrice: sku.originalPrice || sku.price,
+      stock: sku.stock,
+      properties,
+      imageUrl: sku.skuAttr[0]?.enumImageUrl || '',
+    };
+  });
+
+  const totalStock = skus.reduce((sum, sku) => sum + sku.stock, 0);
+
+  return {
+    success: v40.success,
+    code: v40.code,
+    data: {
+      itemId: v40.data.spuNo,
+      title: v40.data.subject,
+      url: v40.data.detailUrl,
+      merchantName: '',
+      merchantId: '',
+      mainImageUrl: v40.data.mainImg,
+      images: v40.data.imageList.map((url) => ({ url })),
+      description: v40.data.description,
+      minOrderQuantity: v40.data.startQuantity || 1,
+      totalStock,
+      price: v40.data.price,
+      originalPrice: v40.data.originalPrice || v40.data.price,
+      skus,
+      brand: '',
+      categoryId: '',
+      categoryName: '',
+    },
+  };
+}
+
+/**
+ * V28 APIレスポンスを共通DTOに変換
+ */
+export function convertV28ToCommon(
+  v28: Taobao1688ItemDetailResponseDto
+): CommonTaobaoItemDto {
+  const skus: CommonSkuItem[] =
+    v28.data.skus?.sku.map((sku) => {
+      const properties: PropertyOption[] = [];
+      const propPairs = sku.properties.split(';');
+
+      propPairs.forEach((pair) => {
+        const [propertyId, valueId] = pair.split(':');
+        const key = `${propertyId}:${valueId}`;
+        const propValue = v28.data.props_list?.[key] || '';
+
+        if (propValue) {
+          const [propertyName, value] = propValue.split(':');
+          properties.push({
+            propertyId,
+            valueId,
+            propertyName,
+            value,
+          });
+        }
+      });
+
+      return {
+        skuId: sku.sku_id.toString(),
+        price: sku.price,
+        originalPrice: sku.orginal_price,
+        stock: sku.quantity,
+        properties,
+      };
+    }) || [];
+
+  return {
+    success: v28.success,
+    code: v28.code,
+    data: {
+      itemId: v28.data.num_iid.toString(),
+      title: v28.data.title_cn || v28.data.title,
+      url: v28.data.detail_url,
+      merchantName: v28.data.nick,
+      merchantId: '',
+      mainImageUrl: v28.data.pic_url,
+      images: v28.data.item_imgs?.map((img) => ({ url: img.url })) || [],
+      description: v28.data.desc,
+      minOrderQuantity: v28.data.min_num,
+      totalStock: v28.data.num,
+      price: v28.data.price,
+      originalPrice: v28.data.orginal_price,
+      skus,
+      brand: v28.data.brand,
+      categoryId: '',
+      categoryName: '',
+    },
+  };
+}
+
+export class Taobao1688ApiService {
+  constructor(
+    private rapidApiService: RapidApiService,
+    private apiVersion: string = 'v28'
+  ) {}
+
+  /** 商品詳細を取得する（共通DTO形式） */
+  public async fetchItemDetail(
+    id: string,
+    site: 'taobao' | '1688' = 'taobao'
+  ): Promise<CommonTaobaoItemDto> {
+    if (this.apiVersion === 'v40') {
+      const v40Response =
+        await this.rapidApiService.request<V40ItemDetailResponseDto>({
+          method: 'get',
+          path: `/v40/detail?itemId=${id}&site=${site}`,
+        });
+      console.log('v40 API response:', JSON.stringify(v40Response));
+      return convertV40ToCommon(v40Response);
+    }
+
+    const v28Response =
+      await this.rapidApiService.request<Taobao1688ItemDetailResponseDto>({
+        method: 'get',
+        path: `/v28/detail?itemId=${id}&site=${site}`,
+      });
+    return convertV28ToCommon(v28Response);
+  }
+
+  /** 商品詳細を複数取得する */
+  public async fetchItemDetails(
+    ids: string[]
+  ): Promise<(Taobao1688ItemDetailResponseDto | null)[]> {
+    const requests: RapidApiRequestDto[] = ids.map((id) => {
+      return {
+        method: 'get',
+        path: `/v28/detail?itemId=${id}&site=taobao`,
+      };
+    });
+    return this.rapidApiService.requestAll<Taobao1688ItemDetailResponseDto>(
+      requests
+    );
+  }
+
+  /** SKU情報を取得する */
+  public async fetchSkuInfo(id: string): Promise<Taobao1688SkuInfoResponseDto> {
+    const response =
+      await this.rapidApiService.request<Taobao1688SkuInfoResponseDto>({
+        method: 'get',
+        path: `/v28/detail?itemId=${id}&site=taobao`,
+      });
+    return response;
+  }
+
+  /** SKU情報を複数取得する */
+  public async fetchSkuInfos(
+    ids: string[]
+  ): Promise<(Taobao1688SkuInfoResponseDto | null)[]> {
+    const requests: RapidApiRequestDto[] = ids.map((id) => {
+      return {
+        method: 'get',
+        path: `/v28/detail?itemId=${id}&site=taobao`,
+      };
+    });
+    return this.rapidApiService.requestAll<Taobao1688SkuInfoResponseDto>(
+      requests
+    );
+  }
+}
