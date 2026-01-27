@@ -21,6 +21,7 @@ import type {
   Taobao1688ItemDetailResponseDto,
   Taobao1688SkuInfoResponseDto,
   ShopDsrInfoResponseDto,
+  ImageSearchByUrlResponseDto,
 } from '../types/taobao1688Api.dto';
 import type {
   CommonTaobaoItemDto,
@@ -361,5 +362,23 @@ export class Taobao1688ApiService {
       });
 
     return convertShopDsrInfoToCommon(response);
+  }
+
+  /** 画像URLから商品を検索する */
+  public async searchByImageUrl(
+    imageUrl: string
+  ): Promise<ImageSearchByUrlResponseDto> {
+    if (!imageUrl) {
+      throw new Error('Image URL is required');
+    }
+
+    const encodedImageUrl = encodeURIComponent(imageUrl);
+    const response =
+      await this.rapidApiService.request<ImageSearchByUrlResponseDto>({
+        method: 'get',
+        path: `/1688/search-image?imgUrl=${encodedImageUrl}`,
+      });
+
+    return response;
   }
 }

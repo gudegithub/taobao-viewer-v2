@@ -241,3 +241,29 @@ export type ShopDsrInfoResponseDto = {
     has_dsr: boolean;
   };
 };
+
+/**
+ * Image Search Result Item
+ */
+export type ImageSearchResultItem = {
+  num_iid: string;
+  title: string;
+  pic_url: string;
+  price: number;
+  nick: string;
+  detail_url: string;
+  sales?: number;
+  location?: string;
+};
+
+/**
+ * Image Search Response (GET /1688/search-image)
+ */
+export type ImageSearchByUrlResponseDto = {
+  success: boolean;
+  code: number;
+  data: {
+    items: ImageSearchResultItem[];
+    total?: number;
+  };
+};
