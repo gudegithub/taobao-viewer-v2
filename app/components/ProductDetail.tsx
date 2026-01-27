@@ -26,7 +26,7 @@ import {
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
-import { ExternalLink, Package, Store } from 'lucide-react';
+import { ExternalLink, Store } from 'lucide-react';
 
 type PropertyGroup = {
   propertyId: string;
@@ -195,11 +195,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   </span>
                 )}
               </div>
-              <div className="mt-2 flex gap-2">
-                <Badge variant="secondary">
-                  <Package className="mr-1 h-3 w-3" />
-                  最小注文数: {product.data.minOrderQuantity}
-                </Badge>
+              <div className="mt-2">
                 <Badge
                   variant={displayStock > 0 ? 'default' : 'destructive'}
                 >
@@ -228,22 +224,29 @@ export function ProductDetail({ product }: ProductDetailProps) {
                         );
 
                         return (
-                          <Button
+                          <div
                             key={option.valueId}
-                            variant={isSelected ? 'default' : 'outline'}
-                            size="sm"
-                            disabled={!isAvailable}
                             onClick={() =>
+                              isAvailable &&
                               handleOptionClick(group.propertyId, option.valueId)
                             }
-                            className={
-                              !isAvailable
-                                ? 'opacity-50 cursor-not-allowed'
-                                : ''
-                            }
+                            className={`
+                              inline-flex items-center justify-center rounded-md text-sm font-medium
+                              px-3 py-2 cursor-pointer select-text transition-colors
+                              ${
+                                isSelected
+                                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                                  : 'border border-input bg-background hover:bg-accent hover:text-accent-foreground'
+                              }
+                              ${
+                                !isAvailable
+                                  ? 'opacity-50 cursor-not-allowed pointer-events-none'
+                                  : ''
+                              }
+                            `}
                           >
                             {option.value}
-                          </Button>
+                          </div>
                         );
                       })}
                     </div>

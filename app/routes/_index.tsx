@@ -16,7 +16,7 @@
 
 import type { Route } from './+types/_index';
 import { redirect } from 'react-router';
-import { ErrorMessage } from '~/components/ErrorMessage';
+import { SearchBar } from '~/components/SearchBar';
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -77,65 +77,8 @@ export async function action({ request }: Route.ActionArgs) {
 
 export default function Home({ actionData }: Route.ComponentProps) {
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-4 bg-gradient-to-br from-orange-50 to-red-50 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-2xl mx-auto text-center space-y-8">
-        {/* エラーメッセージ */}
-        {actionData?.error && (
-          <div className="mb-6">
-            <ErrorMessage message={actionData.error} />
-          </div>
-        )}
-
-        {/* メインコンテンツ */}
-        <div>
-          <h1 className="text-5xl font-bold mb-4 text-gray-900 dark:text-white">
-            Taobao <span className="text-taobao-orange">Viewer</span>
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-            タオバオ・1688の商品情報を簡単に表示
-          </p>
-        </div>
-
-        {/* 使い方 */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-            使い方
-          </h2>
-          <ol className="text-left space-y-3 text-gray-700 dark:text-gray-300">
-            <li className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-taobao-orange text-white flex items-center justify-center text-sm font-bold">
-                1
-              </span>
-              <span>上部の検索バーにタオバオまたは1688の商品URLを入力</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-taobao-orange text-white flex items-center justify-center text-sm font-bold">
-                2
-              </span>
-              <span>検索ボタンをクリック</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-taobao-orange text-white flex items-center justify-center text-sm font-bold">
-                3
-              </span>
-              <span>商品情報、価格、SKU情報を確認</span>
-            </li>
-          </ol>
-        </div>
-
-        {/* 対応URL形式 */}
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          <p className="mb-2 font-medium">対応URL形式:</p>
-          <div className="space-y-1 font-mono text-xs">
-            <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded">
-              Taobao: https://item.taobao.com/item.htm?id=...
-            </div>
-            <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded">
-              1688: https://detail.1688.com/offer/....html
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <SearchBar error={actionData?.error} />
     </div>
   );
 }
