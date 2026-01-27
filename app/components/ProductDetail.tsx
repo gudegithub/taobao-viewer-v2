@@ -186,7 +186,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
             {/* 価格 */}
             <div>
               <div className="flex items-baseline gap-3">
-                <span className="text-3xl font-bold text-taobao-orange">
+                <span className="text-3xl font-bold text-gray-900 dark:text-white">
                   ¥{displayPrice.toLocaleString()}
                 </span>
                 {displayOriginalPrice > displayPrice && (
