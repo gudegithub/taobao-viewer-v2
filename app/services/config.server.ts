@@ -25,20 +25,20 @@ function getEnvVar(name: string): string {
   return value;
 }
 
-let taobaoApiServiceInstance: Taobao1688ApiService | null = null;
+const taobaoApiServiceInstances: Map<string, Taobao1688ApiService> = new Map();
 
-export function getTaobaoApiService(): Taobao1688ApiService {
-  if (!taobaoApiServiceInstance) {
+export function getTaobaoApiService(apiVersion: string = 'v18'): Taobao1688ApiService {
+  if (!taobaoApiServiceInstances.has(apiVersion)) {
     const rapidApiHost = getEnvVar('RAPIDAPI_HOST');
     const rapidApiKey = getEnvVar('RAPIDAPI_KEY');
-    const apiVersion = process.env.API_VERSION || 'v40';
 
     const rapidApiService = new RapidApiService(rapidApiHost, rapidApiKey);
-    taobaoApiServiceInstance = new Taobao1688ApiService(
+    const instance = new Taobao1688ApiService(
       rapidApiService,
       apiVersion
     );
+    taobaoApiServiceInstances.set(apiVersion, instance);
   }
 
-  return taobaoApiServiceInstance;
+  return taobaoApiServiceInstances.get(apiVersion)!;
 }

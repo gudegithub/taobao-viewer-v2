@@ -17,19 +17,30 @@
 import { Form, useNavigation } from 'react-router';
 import { Input } from '~/components/ui/input';
 import { Button } from '~/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select';
 import { Search, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 type SearchBarProps = {
   defaultValue?: string;
+  defaultVersion?: string;
   error?: string;
 };
 
 export function SearchBar({
   defaultValue = '',
+  defaultVersion = 'v18',
   error,
 }: SearchBarProps) {
   const navigation = useNavigation();
   const isSearching = navigation.state !== 'idle';
+  const [apiVersion, setApiVersion] = useState(defaultVersion);
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -44,6 +55,21 @@ export function SearchBar({
             required
             disabled={isSearching}
           />
+          <input type="hidden" name="apiVersion" value={apiVersion} />
+          <Select
+            value={apiVersion}
+            onValueChange={setApiVersion}
+            disabled={isSearching}
+          >
+            <SelectTrigger className="w-24">
+              <SelectValue placeholder="v18" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="v18">v18</SelectItem>
+              <SelectItem value="v28">v28</SelectItem>
+              <SelectItem value="v40">v40</SelectItem>
+            </SelectContent>
+          </Select>
           <Button type="submit" disabled={isSearching}>
             {isSearching ? (
               <>

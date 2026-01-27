@@ -57,6 +57,7 @@ function extractItemId(url: string): { id: string; site: 'taobao' | '1688' } | n
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const url = formData.get('url');
+  const apiVersion = formData.get('apiVersion') || 'v18';
 
   if (typeof url !== 'string' || !url.trim()) {
     return {
@@ -72,7 +73,7 @@ export async function action({ request }: Route.ActionArgs) {
     };
   }
 
-  return redirect(`/product/${extracted.id}?site=${extracted.site}`);
+  return redirect(`/product/${extracted.id}?site=${extracted.site}&apiVersion=${apiVersion}`);
 }
 
 export default function Home({ actionData }: Route.ComponentProps) {

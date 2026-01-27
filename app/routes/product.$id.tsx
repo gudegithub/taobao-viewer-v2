@@ -34,6 +34,7 @@ export function meta({ data }: Route.MetaArgs) {
 export async function loader({ params, request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const site = (url.searchParams.get('site') as 'taobao' | '1688') || 'taobao';
+  const apiVersion = url.searchParams.get('apiVersion') || 'v18';
   const itemId = params.id;
 
   if (!itemId) {
@@ -41,7 +42,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   }
 
   try {
-    const taobaoApi = getTaobaoApiService();
+    const taobaoApi = getTaobaoApiService(apiVersion);
     const productData = await taobaoApi.fetchItemDetail(itemId, site);
 
     if (!productData.success) {

@@ -14,6 +14,78 @@
  * limitations under the License.
  */
 
+// V18 Response Types
+export type V18Parameter = {
+  groupCode: string;
+  type: string;
+  typename: string;
+  code: string;
+  name: string;
+  pic: string | null;
+};
+
+export type V18GoodsGroupItem = {
+  properties: string;
+  properties_name: string;
+  price: number;
+  keyPrice: string;
+  quantity: string;
+  sku_id: number;
+};
+
+export type V18ItemDetailResponseDto = {
+  success: boolean;
+  data: {
+    info: {
+      iid: string;
+      num_iid: string;
+      title: string;
+      props_name: string;
+      parameter: Record<string, V18Parameter[]>;
+      bizinfo: {
+        sid: string;
+        title: string;
+        shop_score: {
+          item_score: string;
+          delivery_score: string;
+          service_score: string;
+        };
+      };
+      nick: string;
+      detail_url: string;
+      status: string;
+      approve_status: string;
+      shopurl: string;
+      shopType: string;
+      location: {
+        state: string;
+        city: string;
+      };
+      pic_url: string;
+      imagePhoto: string;
+      imgString: string;
+      cid: string;
+      price: number;
+      express_fee: string;
+      freight: string;
+      minNumber: number;
+      goods_sum: number;
+      desc: string;
+      rank_arr: string;
+      arrow_level: string;
+      parameterSort: number[];
+      ratePrice: string;
+      rateExpress_fee: string;
+    };
+    preferential: Record<string, number>;
+    goodsGroup: Record<string, V18GoodsGroupItem>;
+    keywords: string;
+    title: string;
+    description: string;
+  };
+  code: number;
+};
+
 // V28 Response Types
 export type SkuItem = {
   price: number;

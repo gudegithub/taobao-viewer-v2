@@ -16,6 +16,7 @@
 
 import { RapidApiService, type RapidApiRequestDto } from './rapidApi.server';
 import type {
+  V18ItemDetailResponseDto,
   V40ItemDetailResponseDto,
   Taobao1688ItemDetailResponseDto,
   Taobao1688SkuInfoResponseDto,
@@ -25,6 +26,86 @@ import type {
   CommonSkuItem,
   PropertyOption,
 } from '../types/common.dto';
+
+/**
+ * V18 APIレスポンスを共通DTOに変換
+ */
+export function convertV18ToCommon(
+  v18: V18ItemDetailResponseDto
+): CommonTaobaoItemDto {
+  if (!v18.data || !v18.data.info) {
+    console.error('v18.data or v18.data.info is undefined. Full response:', v18);
+    throw new Error('Invalid v18 response: data is missing');
+  }
+
+  const { info, goodsGroup, preferential } = v18.data;
+
+  // 画像をimgStringから抽出（<img src="..." />形式）
+  const images: { url: string }[] = [];
+  if (info.imgString) {
+    const imgMatches = info.imgString.matchAll(/src="([^"]+)"/g);
+    for (const match of imgMatches) {
+      images.push({ url: match[1].replace('_80x80.jpg', '') });
+    }
+  }
+
+  // SKU情報を変換
+  const skus: CommonSkuItem[] = Object.values(goodsGroup).map((sku) => {
+    // properties_nameから各プロパティを抽出
+    // 例: "20509:28314:尺码:S;1627207:28332:颜色分类:浅灰色"
+    const properties: PropertyOption[] = [];
+    const propPairs = sku.properties_name.split(';').filter((p) => p.trim());
+
+    propPairs.forEach((pair) => {
+      const parts = pair.split(':');
+      if (parts.length >= 4) {
+        const [propertyId, valueId, propertyName, value] = parts;
+        properties.push({
+          propertyId,
+          propertyName,
+          valueId,
+          value,
+        });
+      }
+    });
+
+    return {
+      skuId: sku.sku_id.toString(),
+      price: sku.price,
+      originalPrice: sku.price,
+      stock: parseInt(sku.quantity, 10),
+      properties,
+    };
+  });
+
+  // 総在庫を計算
+  const totalStock = skus.reduce((sum, sku) => sum + sku.stock, 0);
+
+  // 価格範囲を取得
+  const minPrice = preferential.min || info.price;
+  const maxPrice = preferential.max || info.price;
+
+  return {
+    success: v18.success,
+    code: v18.code,
+    data: {
+      itemId: info.num_iid,
+      title: info.title,
+      url: info.detail_url,
+      merchantName: info.nick,
+      merchantId: info.bizinfo?.sid || '',
+      mainImageUrl: info.pic_url,
+      images,
+      description: info.desc,
+      minOrderQuantity: info.minNumber || 1,
+      totalStock,
+      price: minPrice,
+      originalPrice: maxPrice,
+      skus,
+      brand: '',
+    },
+  };
+}
 
 /**
  * V40 APIレスポンスを共通DTOに変換
@@ -164,6 +245,17 @@ export class Taobao1688ApiService {
       return convertV40ToCommon(v40Response);
     }
 
+    if (this.apiVersion === 'v18') {
+      const v18Response =
+        await this.rapidApiService.request<V18ItemDetailResponseDto>({
+          method: 'get',
+          path: `/v18/detail?itemId=${id}&site=${site}`,
+        });
+      console.log('v18 API response:', JSON.stringify(v18Response));
+      return convertV18ToCommon(v18Response);
+    }
+
+    // v28
     const v28Response =
       await this.rapidApiService.request<Taobao1688ItemDetailResponseDto>({
         method: 'get',
