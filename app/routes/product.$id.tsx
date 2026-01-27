@@ -43,13 +43,39 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
   try {
     const taobaoApi = getTaobaoApiService(apiVersion);
-    const productData = await taobaoApi.fetchItemDetail(itemId, site);
+    let productData;
+
+    try {
+      productData = await taobaoApi.fetchItemDetail(itemId, site);
+    } catch (error) {
+      // API returns error response (e.g., "Item not available")
+      console.error('API error:', error);
+      throw new Response('商品が見つかりませんでした。商品が削除されたか、IDが間違っている可能性があります。', {
+        status: 404,
+        statusText: 'Item Not Found'
+      });
+    }
 
     if (!productData.success) {
       throw new Response('商品データの取得に失敗しました', { status: 404 });
     }
 
-    return productData;
+    // セラー評価データを取得（エラーがあっても商品データは返す）
+    let sellerRating = null;
+    if (productData.data.merchantId) {
+      try {
+        sellerRating = await taobaoApi.fetchSellerRating(
+          productData.data.merchantId
+        );
+      } catch (error) {
+        console.error('Failed to fetch seller rating:', error);
+      }
+    }
+
+    return {
+      ...productData,
+      sellerRating,
+    };
   } catch (error) {
     console.error('Failed to fetch product:', error);
     throw new Response('商品データの取得中にエラーが発生しました', {
@@ -68,7 +94,10 @@ export default function ProductPage({ loaderData }: Route.ComponentProps) {
         {isLoading ? (
           <ProductDetailSkeleton />
         ) : (
-          <ProductDetail product={loaderData} />
+          <ProductDetail
+            product={loaderData}
+            sellerRating={loaderData.sellerRating}
+          />
         )}
       </div>
     </div>

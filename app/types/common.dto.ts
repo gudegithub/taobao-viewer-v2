@@ -99,3 +99,46 @@ export type CommonTaobaoItemDto = {
     categoryName?: string;
   };
 };
+
+/**
+ * セラー評価情報（DSR - Detail Seller Rating）
+ */
+export type SellerRatingDto = {
+  /** 成功フラグ */
+  success: boolean;
+  /** エラーコード */
+  code: number;
+  /** 評価データ */
+  data: {
+    /** 商品スコア（1-5点） */
+    itemScore: number;
+    /** 商品スコアの業界平均との比較値（%） */
+    itemCompareValue: number;
+    /** 商品スコアの比較方向（0=平均以上, 1=平均） */
+    itemCompareDirection: number;
+    /** 商品スコアの説明文 */
+    itemScoreDescription: string;
+    /** サービススコア（1-5点） */
+    serviceScore: number;
+    /** サービススコアの業界平均との比較値（%） */
+    serviceCompareValue: number;
+    /** サービススコアの比較方向（0=平均以上, 1=平均） */
+    serviceCompareDirection: number;
+    /** サービススコアの説明文 */
+    serviceScoreDescription: string;
+    /** 配送スコア（1-5点） */
+    deliveryScore: number;
+    /** 配送スコアの業界平均との比較値（%） */
+    deliveryCompareValue: number;
+    /** 配送スコアの比較方向（0=平均以上, 1=平均） */
+    deliveryCompareDirection: number;
+    /** 配送スコアの説明文 */
+    deliveryScoreDescription: string;
+    /** セラー良好率（%） */
+    sellerGoodRate: number;
+    /** セラークレジット */
+    sellerCredit: number;
+    /** DSRデータを持っているか */
+    hasDsr: boolean;
+  };
+};

@@ -134,6 +134,11 @@ export type V40ItemDetailResponseDto = {
     originalPrice: number | null;
     originalPriceCny: number | null;
     skuVoList: V40SkuVo[];
+    tagList: any[] | null;
+    favorite: boolean;
+    shopId: string;
+    shopName: string;
+    discount: number;
   };
   code: number;
 };
@@ -171,6 +176,18 @@ export type Taobao1688ItemDetailResponseDto = {
     skus?: {
       sku: SkuItem[];
     };
+    seller_id?: string;
+    shop_id?: number;
+    seller_info?: {
+      nick: string;
+      shop_logo: string;
+      shop_name: string;
+      title: string;
+      zhuy: string;
+      sid: number;
+    };
+    sales?: number;
+    status?: number;
   };
   code: number;
 };
@@ -197,4 +214,30 @@ export type Taobao1688SkuInfoResponseDto = {
     };
   };
   code: number;
+};
+
+/**
+ * ShopDsrInfo APIのレスポンス型
+ */
+export type ShopDsrInfoResponseDto = {
+  ret_id: number;
+  ret_code: number;
+  ret_message: string;
+  ret_body: string | {
+    item_score: number;
+    item_compare_value: number;
+    item_compare_direction: number;
+    item_score_description: string;
+    service_score: number;
+    service_compare_value: number;
+    service_compare_direction: number;
+    service_score_description: string;
+    delivery_score: number;
+    delivery_compare_value: number;
+    delivery_compare_direction: number;
+    delivery_score_description: string;
+    seller_good_rate: number;
+    seller_credit: number;
+    has_dsr: boolean;
+  };
 };

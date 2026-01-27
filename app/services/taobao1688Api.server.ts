@@ -20,11 +20,13 @@ import type {
   V40ItemDetailResponseDto,
   Taobao1688ItemDetailResponseDto,
   Taobao1688SkuInfoResponseDto,
+  ShopDsrInfoResponseDto,
 } from '../types/taobao1688Api.dto';
 import type {
   CommonTaobaoItemDto,
   CommonSkuItem,
   PropertyOption,
+  SellerRatingDto,
 } from '../types/common.dto';
 
 /**
@@ -33,8 +35,12 @@ import type {
 export function convertV18ToCommon(
   v18: V18ItemDetailResponseDto
 ): CommonTaobaoItemDto {
+  // APIがエラーレスポンスを返した場合
+  if (!v18.success) {
+    throw new Error((v18 as any).message || 'Failed to fetch item data');
+  }
+
   if (!v18.data || !v18.data.info) {
-    console.error('v18.data or v18.data.info is undefined. Full response:', v18);
     throw new Error('Invalid v18 response: data is missing');
   }
 
@@ -114,7 +120,6 @@ export function convertV40ToCommon(
   v40: V40ItemDetailResponseDto
 ): CommonTaobaoItemDto {
   if (!v40.data) {
-    console.error('v40.data is undefined. Full response:', v40);
     throw new Error('Invalid v40 response: data is missing');
   }
 
@@ -147,8 +152,8 @@ export function convertV40ToCommon(
       itemId: v40.data.spuNo,
       title: v40.data.subject,
       url: v40.data.detailUrl,
-      merchantName: '',
-      merchantId: '',
+      merchantName: v40.data.shopName,
+      merchantId: v40.data.shopId,
       mainImageUrl: v40.data.mainImg,
       images: v40.data.imageList.map((url) => ({ url })),
       description: v40.data.description,
@@ -160,6 +165,40 @@ export function convertV40ToCommon(
       brand: '',
       categoryId: '',
       categoryName: '',
+    },
+  };
+}
+
+/**
+ * ShopDsrInfo APIレスポンスを共通DTOに変換
+ */
+export function convertShopDsrInfoToCommon(
+  response: ShopDsrInfoResponseDto
+): SellerRatingDto {
+  // ret_bodyが文字列の場合はパースする
+  const ret_body = typeof response.ret_body === 'string'
+    ? JSON.parse(response.ret_body)
+    : response.ret_body;
+
+  return {
+    success: response.ret_code === 0,
+    code: response.ret_code,
+    data: {
+      itemScore: ret_body.item_score,
+      itemCompareValue: ret_body.item_compare_value,
+      itemCompareDirection: ret_body.item_compare_direction,
+      itemScoreDescription: ret_body.item_score_description,
+      serviceScore: ret_body.service_score,
+      serviceCompareValue: ret_body.service_compare_value,
+      serviceCompareDirection: ret_body.service_compare_direction,
+      serviceScoreDescription: ret_body.service_score_description,
+      deliveryScore: ret_body.delivery_score,
+      deliveryCompareValue: ret_body.delivery_compare_value,
+      deliveryCompareDirection: ret_body.delivery_compare_direction,
+      deliveryScoreDescription: ret_body.delivery_score_description,
+      sellerGoodRate: ret_body.seller_good_rate,
+      sellerCredit: ret_body.seller_credit,
+      hasDsr: ret_body.has_dsr,
     },
   };
 }
@@ -200,6 +239,16 @@ export function convertV28ToCommon(
       };
     }) || [];
 
+  // セラーIDを取得（優先順位: seller_info.sid > shop_id > seller_id）
+  const merchantId = v28.data.seller_info?.sid
+    ? v28.data.seller_info.sid.toString()
+    : v28.data.shop_id
+    ? v28.data.shop_id.toString()
+    : v28.data.seller_id || '';
+
+  // セラー名を取得（優先順位: seller_info.shop_name > nick）
+  const merchantName = v28.data.seller_info?.shop_name || v28.data.nick;
+
   return {
     success: v28.success,
     code: v28.code,
@@ -207,8 +256,8 @@ export function convertV28ToCommon(
       itemId: v28.data.num_iid.toString(),
       title: v28.data.title_cn || v28.data.title,
       url: v28.data.detail_url,
-      merchantName: v28.data.nick,
-      merchantId: '',
+      merchantName,
+      merchantId,
       mainImageUrl: v28.data.pic_url,
       images: v28.data.item_imgs?.map((img) => ({ url: img.url })) || [],
       description: v28.data.desc,
@@ -241,7 +290,6 @@ export class Taobao1688ApiService {
           method: 'get',
           path: `/v40/detail?itemId=${id}&site=${site}`,
         });
-      console.log('v40 API response:', JSON.stringify(v40Response));
       return convertV40ToCommon(v40Response);
     }
 
@@ -251,7 +299,6 @@ export class Taobao1688ApiService {
           method: 'get',
           path: `/v18/detail?itemId=${id}&site=${site}`,
         });
-      console.log('v18 API response:', JSON.stringify(v18Response));
       return convertV18ToCommon(v18Response);
     }
 
@@ -302,5 +349,17 @@ export class Taobao1688ApiService {
     return this.rapidApiService.requestAll<Taobao1688SkuInfoResponseDto>(
       requests
     );
+  }
+
+  /** セラー評価情報を取得する */
+  public async fetchSellerRating(sellerId: string): Promise<SellerRatingDto> {
+    const response =
+      await this.rapidApiService.request<ShopDsrInfoResponseDto>({
+        method: 'get',
+        path: `/Shop/WebShopScoreGet.ashx?seller_id=${sellerId}`,
+        host: 'taobao-tmall-data-service.p.rapidapi.com',
+      });
+
+    return convertShopDsrInfoToCommon(response);
   }
 }

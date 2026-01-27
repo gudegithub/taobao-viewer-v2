@@ -18,6 +18,7 @@ export type RapidApiRequestDto = {
   method: 'post' | 'get' | 'put' | 'delete';
   path: string;
   payload?: object;
+  host?: string;
 };
 
 export class RapidApiService {
@@ -33,15 +34,16 @@ export class RapidApiService {
     method,
     path,
     payload,
+    host,
   }: RapidApiRequestDto): Promise<T> {
-    const url = `https://${this.host}${path}`;
-    console.log('RapidAPI request URL:', url);
+    const requestHost = host || this.host;
+    const url = `https://${requestHost}${path}`;
 
     const options: RequestInit = {
       method: method.toUpperCase(),
       headers: {
         'Content-Type': 'application/json',
-        'x-rapidapi-host': this.host,
+        'x-rapidapi-host': requestHost,
         'x-rapidapi-key': this.key,
       },
       body: payload ? JSON.stringify(payload) : undefined,
@@ -50,9 +52,6 @@ export class RapidApiService {
     const response = await fetch(url, options);
     const statusCode = response.status;
     const responseText = await response.text();
-
-    console.log('RapidAPI status:', statusCode);
-    console.log('RapidAPI response text:', responseText);
 
     if (statusCode !== 200) {
       throw new Error(
@@ -82,17 +81,12 @@ export class RapidApiService {
         const response = await fetch(url, options);
 
         if (response.status !== 200) {
-          const responseText = await response.text();
-          console.log(
-            `API Error [${index}]: Status ${response.status}, URL: ${request.path}, Response: ${responseText}`
-          );
           return null;
         }
 
         const responseText = await response.text();
         return JSON.parse(responseText) as T;
       } catch (error) {
-        console.error(`API Error [${index}]:`, error);
         return null;
       }
     });

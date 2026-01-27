@@ -15,7 +15,11 @@
  */
 
 import { useState, useMemo, useEffect } from 'react';
-import type { CommonTaobaoItemDto, PropertyOption } from '~/types/common.dto';
+import type {
+  CommonTaobaoItemDto,
+  PropertyOption,
+  SellerRatingDto,
+} from '~/types/common.dto';
 import {
   Card,
   CardContent,
@@ -26,7 +30,16 @@ import {
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
-import { ExternalLink, Store } from 'lucide-react';
+import {
+  ExternalLink,
+  Store,
+  Copy,
+  Check,
+  Star,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+} from 'lucide-react';
 
 type PropertyGroup = {
   propertyId: string;
@@ -36,13 +49,18 @@ type PropertyGroup = {
 
 type ProductDetailProps = {
   product: CommonTaobaoItemDto;
+  sellerRating?: SellerRatingDto | null;
 };
 
-export function ProductDetail({ product }: ProductDetailProps) {
+export function ProductDetail({
+  product,
+  sellerRating,
+}: ProductDetailProps) {
   const [selectedOptions, setSelectedOptions] = useState<
     Record<string, string>
   >({});
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isCopied, setIsCopied] = useState(false);
 
   // プロパティグループを作成（全SKUからプロパティを集約し重複排除）
   const propertyGroups = useMemo<PropertyGroup[]>(() => {
@@ -123,6 +141,18 @@ export function ProductDetail({ product }: ProductDetailProps) {
     });
   };
 
+  const handleCopyClick = async () => {
+    try {
+      await navigator.clipboard.writeText(product.data.url);
+      setIsCopied(true);
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to copy:', error);
+    }
+  };
+
   const displayPrice = selectedSku
     ? selectedSku.price
     : product.data.price;
@@ -180,6 +210,63 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 {product.data.merchantName || '販売者情報なし'}
               </CardDescription>
             </div>
+
+            {/* セラー評価（簡易版） */}
+            {sellerRating?.success && sellerRating.data.hasDsr && (
+              <>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Star className="h-4 w-4 text-yellow-500" />
+                    <span className="text-sm font-medium">セラー評価</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    {/* 商品スコア */}
+                    <div className="text-center">
+                      <div className="text-lg font-bold">
+                        {sellerRating.data.itemScore.toFixed(1)}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        商品
+                      </div>
+                      {sellerRating.data.itemCompareDirection === 0 && (
+                        <TrendingUp className="h-3 w-3 text-green-600 mx-auto mt-1" />
+                      )}
+                    </div>
+
+                    {/* サービススコア */}
+                    <div className="text-center">
+                      <div className="text-lg font-bold">
+                        {sellerRating.data.serviceScore.toFixed(1)}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        サービス
+                      </div>
+                      {sellerRating.data.serviceCompareDirection === 0 && (
+                        <TrendingUp className="h-3 w-3 text-green-600 mx-auto mt-1" />
+                      )}
+                    </div>
+
+                    {/* 配送スコア */}
+                    <div className="text-center">
+                      <div className="text-lg font-bold">
+                        {sellerRating.data.deliveryScore.toFixed(1)}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        配送
+                      </div>
+                      {sellerRating.data.deliveryCompareDirection === 0 ? (
+                        <TrendingUp className="h-3 w-3 text-green-600 mx-auto mt-1" />
+                      ) : sellerRating.data.deliveryCompareDirection === 1 ? (
+                        <Minus className="h-3 w-3 text-gray-600 mx-auto mt-1" />
+                      ) : (
+                        <TrendingDown className="h-3 w-3 text-red-600 mx-auto mt-1" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
             <Separator />
 
@@ -258,18 +345,30 @@ export function ProductDetail({ product }: ProductDetailProps) {
             <Separator />
 
             {/* アクション */}
-            <div>
+            <div className="flex gap-2">
               <a
                 href={product.data.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block"
+                className="flex-1"
               >
                 <Button className="w-full" size="lg">
                   <ExternalLink className="mr-2 h-5 w-5" />
                   Taobaoで開く
                 </Button>
               </a>
+              <Button
+                className="flex-shrink-0"
+                size="lg"
+                variant="outline"
+                onClick={handleCopyClick}
+              >
+                {isCopied ? (
+                  <Check className="h-5 w-5" />
+                ) : (
+                  <Copy className="h-5 w-5" />
+                )}
+              </Button>
             </div>
 
             {/* ブランド情報 */}
