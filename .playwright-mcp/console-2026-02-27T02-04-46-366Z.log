@@ -1,0 +1,4 @@
+[    9889ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ http://localhost:5173/product/522122071190.data?site=taobao&apiVersion=v18&apiProvider=datahub:0
+[  116330ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ http://localhost:5173/product/522122071190?site=taobao&apiVersion=v18&apiProvider=datahub:0
+[  124794ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ http://localhost:5173/product/522122071190?site=taobao&apiVersion=v18&apiProvider=datahub:0
+[  133742ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ http://localhost:5173/product/522122071190.data?site=taobao&apiVersion=v18&apiProvider=datahub:0

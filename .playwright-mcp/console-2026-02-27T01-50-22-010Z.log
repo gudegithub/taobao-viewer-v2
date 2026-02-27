@@ -1,0 +1,15 @@
+[   10446ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ http://localhost:5174/product/522122071190.data?site=taobao&apiVersion=v18:0
+[   33161ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/product/522122071190.data?site=taobao&apiVersion=v18:0
+[  106997ms] [ERROR] WebSocket connection to 'ws://localhost:5174/?token=q5e_8yKcbAPF' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:744
+[  106999ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/favicon.ico:0
+[  107000ms] [ERROR] WebSocket connection to 'ws://localhost:5173/?token=q5e_8yKcbAPF' failed: Error during WebSocket handshake: Unexpected response code: 400 @ http://localhost:5174/@vite/client:754
+[  107000ms] [ERROR] [vite] failed to connect to websocket.
+your current setup:
+  (browser) localhost:5174/ <--[HTTP]--> localhost:5173/ (server)
+  (browser) localhost:5174/ <--[WebSocket (failing)]--> localhost:5173/ (server)
+Check out your Vite / network configuration and https://vite.dev/config/server-options.html#server-hmr . @ http://localhost:5174/@vite/client:764
+[  113408ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/_root.data?index:0
+[  113438ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/favicon.ico:0
+[  115030ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/favicon.ico:0
+[  123435ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/_root.data?index:0
+[  123462ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/favicon.ico:0

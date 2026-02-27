@@ -31,7 +31,7 @@ function getEnvVar(name: string): string {
   return value;
 }
 
-export type ApiProvider = 'legacy' | 'datahub' | '1688datahub' | 'tmall1688' | 'v10' | 'auto';
+export type ApiProvider = 'v18' | 'v28' | 'v40' | 'datahub' | '1688datahub' | 'tmall1688' | 'v10' | 'auto';
 
 const taobaoApiServiceInstances: Map<string, Taobao1688ApiService> = new Map();
 const dataHubApiServiceInstance: Map<string, TaobaoDataHubApiService> = new Map();
@@ -41,8 +41,7 @@ const v10ApiServiceInstance: Map<string, Taobao1688V10ApiService> = new Map();
 let sellerRatingServiceInstance: SellerRatingService | null = null;
 
 export function getTaobaoApiService(
-  apiVersion: string = 'v18',
-  provider: ApiProvider = 'legacy'
+  provider: ApiProvider = 'v28'
 ): Taobao1688ApiService | TaobaoDataHubApiService | DataHub1688ApiService | TaobaoTmall1688ApiService | Taobao1688V10ApiService {
   if (provider === 'v10') {
     const key = 'v10';
@@ -88,7 +87,8 @@ export function getTaobaoApiService(
     return dataHubApiServiceInstance.get(key)!;
   }
 
-  // Legacy API (existing)
+  // v18, v28, v40 - Legacy API versions
+  const apiVersion = provider;
   if (!taobaoApiServiceInstances.has(apiVersion)) {
     const rapidApiHost = getEnvVar('RAPIDAPI_HOST');
     const rapidApiKey = getEnvVar('RAPIDAPI_KEY');
@@ -106,32 +106,33 @@ export function getTaobaoApiService(
 
 /**
  * Fetch item detail with automatic fallback between multiple API providers
- * Tries APIs in order: v10 → tmall1688 → legacy v18 → legacy v28
+ * Tries APIs in order: v28 → v18 → v10 → tmall1688 → v40
  */
 export async function fetchItemDetailWithFallback(
   itemId: string,
   site: 'taobao' | '1688' = 'taobao'
 ): Promise<CommonTaobaoItemDto> {
-  const apiProviders: Array<{ provider: ApiProvider; version?: string }> = [
-    { provider: 'v10' },
-    { provider: 'tmall1688' },
-    { provider: 'legacy', version: 'v18' },
-    { provider: 'legacy', version: 'v28' },
+  const apiProviders: ApiProvider[] = [
+    'v28',
+    'v18',
+    'v10',
+    'tmall1688',
+    'v40',
   ];
 
   const errors: Array<{ provider: string; error: string }> = [];
 
-  for (const { provider, version = 'v18' } of apiProviders) {
+  for (const provider of apiProviders) {
     try {
-      console.log(`[Auto Mode] Trying ${provider}${version ? ` (${version})` : ''}...`);
-      const apiService = getTaobaoApiService(version, provider);
+      console.log(`[Auto Mode] Trying ${provider}...`);
+      const apiService = getTaobaoApiService(provider);
       const result = await apiService.fetchItemDetail(itemId, site);
-      console.log(`[Auto Mode] Success with ${provider}${version ? ` (${version})` : ''}`);
+      console.log(`[Auto Mode] Success with ${provider}`);
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      errors.push({ provider: `${provider}${version ? ` (${version})` : ''}`, error: errorMessage });
-      console.log(`[Auto Mode] Failed with ${provider}${version ? ` (${version})` : ''}: ${errorMessage}`);
+      errors.push({ provider, error: errorMessage });
+      console.log(`[Auto Mode] Failed with ${provider}: ${errorMessage}`);
       // Continue to next provider
     }
   }

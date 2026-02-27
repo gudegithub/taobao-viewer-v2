@@ -16,7 +16,7 @@
 
 import type { Route } from './+types/product.$id';
 import { useNavigation } from 'react-router';
-import { getTaobaoApiService, fetchItemDetailWithFallback, getSellerRatingService, type ApiProvider } from '~/services/config.server';
+import { getTaobaoApiService, fetchItemDetailWithFallback, type ApiProvider } from '~/services/config.server';
 import { ProductDetail } from '~/components/ProductDetail';
 import { ProductDetailSkeleton } from '~/components/ProductDetailSkeleton';
 
@@ -34,8 +34,7 @@ export function meta({ data }: Route.MetaArgs) {
 export async function loader({ params, request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const site = (url.searchParams.get('site') as 'taobao' | '1688') || 'taobao';
-  const apiVersion = url.searchParams.get('apiVersion') || 'v18';
-  const apiProvider = (url.searchParams.get('apiProvider') as ApiProvider) || 'legacy';
+  const apiProvider = (url.searchParams.get('apiProvider') as ApiProvider) || 'v28';
   const itemId = params.id;
 
   if (!itemId) {
@@ -58,7 +57,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       }
     } else {
       // Use specific API provider
-      const taobaoApi = getTaobaoApiService(apiVersion, apiProvider);
+      const taobaoApi = getTaobaoApiService(apiProvider);
       try {
         productData = await taobaoApi.fetchItemDetail(itemId, site);
       } catch (error) {
