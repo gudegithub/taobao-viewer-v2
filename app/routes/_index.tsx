@@ -58,6 +58,7 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const url = formData.get('url');
   const apiVersion = formData.get('apiVersion') || 'v18';
+  const apiProvider = formData.get('apiProvider') || 'auto';
 
   if (typeof url !== 'string' || !url.trim()) {
     return {
@@ -73,7 +74,7 @@ export async function action({ request }: Route.ActionArgs) {
     };
   }
 
-  return redirect(`/product/${extracted.id}?site=${extracted.site}&apiVersion=${apiVersion}`);
+  return redirect(`/product/${extracted.id}?site=${extracted.site}&apiVersion=${apiVersion}&apiProvider=${apiProvider}`);
 }
 
 export default function Home({ actionData }: Route.ComponentProps) {

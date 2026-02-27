@@ -61,16 +61,17 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     }
 
     // セラー評価データを取得（エラーがあっても商品データは返す）
+    // TODO: seller rating APIが502エラーでタイムアウトするため、一時的に無効化
     let sellerRating = null;
-    if (productData.data.merchantId) {
-      try {
-        sellerRating = await taobaoApi.fetchSellerRating(
-          productData.data.merchantId
-        );
-      } catch (error) {
-        console.error('Failed to fetch seller rating:', error);
-      }
-    }
+    // if (productData.data.merchantId) {
+    //   try {
+    //     sellerRating = await taobaoApi.fetchSellerRating(
+    //       productData.data.merchantId
+    //     );
+    //   } catch (error) {
+    //     console.error('Failed to fetch seller rating:', error);
+    //   }
+    // }
 
     return {
       ...productData,
