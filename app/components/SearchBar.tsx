@@ -30,17 +30,20 @@ import { useState } from 'react';
 type SearchBarProps = {
   defaultValue?: string;
   defaultVersion?: string;
+  defaultProvider?: string;
   error?: string;
 };
 
 export function SearchBar({
   defaultValue = '',
   defaultVersion = 'v18',
+  defaultProvider = 'auto',
   error,
 }: SearchBarProps) {
   const navigation = useNavigation();
   const isSearching = navigation.state !== 'idle';
   const [apiVersion, setApiVersion] = useState(defaultVersion);
+  const [apiProvider, setApiProvider] = useState(defaultProvider);
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -56,20 +59,38 @@ export function SearchBar({
             disabled={isSearching}
           />
           <input type="hidden" name="apiVersion" value={apiVersion} />
+          <input type="hidden" name="apiProvider" value={apiProvider} />
           <Select
-            value={apiVersion}
-            onValueChange={setApiVersion}
+            value={apiProvider}
+            onValueChange={setApiProvider}
             disabled={isSearching}
           >
-            <SelectTrigger className="w-24">
-              <SelectValue placeholder="v18" />
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Auto" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="v18">v18</SelectItem>
-              <SelectItem value="v28">v28</SelectItem>
-              <SelectItem value="v40">v40</SelectItem>
+              <SelectItem value="auto">Auto (推奨)</SelectItem>
+              <SelectItem value="v10">v10 (最新)</SelectItem>
+              <SelectItem value="tmall1688">Tmall 1688</SelectItem>
+              <SelectItem value="legacy">Legacy</SelectItem>
             </SelectContent>
           </Select>
+          {apiProvider === 'legacy' && (
+            <Select
+              value={apiVersion}
+              onValueChange={setApiVersion}
+              disabled={isSearching}
+            >
+              <SelectTrigger className="w-24">
+                <SelectValue placeholder="v18" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="v18">v18</SelectItem>
+                <SelectItem value="v28">v28</SelectItem>
+                <SelectItem value="v40">v40</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
           <Button type="submit" disabled={isSearching}>
             {isSearching ? (
               <>

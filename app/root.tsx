@@ -5,7 +5,6 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  redirect,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -24,56 +23,6 @@ export const links: Route.LinksFunction = () => [
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
-
-/**
- * Taobaoまたは1688のURLから商品IDを抽出
- */
-function extractItemId(url: string): { id: string; site: 'taobao' | '1688' } | null {
-  try {
-    const urlObj = new URL(url);
-
-    // Taobao: https://item.taobao.com/item.htm?id=123456789
-    if (urlObj.hostname.includes('taobao.com')) {
-      const id = urlObj.searchParams.get('id');
-      if (id) {
-        return { id, site: 'taobao' };
-      }
-    }
-
-    // 1688: https://detail.1688.com/offer/123456789.html
-    if (urlObj.hostname.includes('1688.com')) {
-      const match = urlObj.pathname.match(/\/offer\/(\d+)\.html/);
-      if (match && match[1]) {
-        return { id: match[1], site: '1688' };
-      }
-    }
-
-    return null;
-  } catch (error) {
-    return null;
-  }
-}
-
-export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData();
-  const url = formData.get('url');
-
-  if (typeof url !== 'string' || !url.trim()) {
-    return {
-      error: 'URLを入力してください',
-    };
-  }
-
-  const extracted = extractItemId(url.trim());
-
-  if (!extracted) {
-    return {
-      error: '有効なタオバオまたは1688の商品URLを入力してください',
-    };
-  }
-
-  return redirect(`/product/${extracted.id}?site=${extracted.site}`);
-}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (

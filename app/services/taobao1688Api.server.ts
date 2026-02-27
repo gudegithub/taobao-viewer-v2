@@ -15,6 +15,7 @@
  */
 
 import { RapidApiService, type RapidApiRequestDto } from './rapidApi.server';
+import { convertShopDsrInfoToCommon } from './sellerRating.server';
 import type {
   V18ItemDetailResponseDto,
   V40ItemDetailResponseDto,
@@ -119,6 +120,11 @@ export function convertV18ToCommon(
 export function convertV40ToCommon(
   v40: V40ItemDetailResponseDto
 ): CommonTaobaoItemDto {
+  // APIがエラーレスポンスを返した場合
+  if (!v40.success) {
+    throw new Error((v40 as any).message || 'Failed to fetch item data');
+  }
+
   if (!v40.data) {
     throw new Error('Invalid v40 response: data is missing');
   }
@@ -170,45 +176,20 @@ export function convertV40ToCommon(
 }
 
 /**
- * ShopDsrInfo APIレスポンスを共通DTOに変換
- */
-export function convertShopDsrInfoToCommon(
-  response: ShopDsrInfoResponseDto
-): SellerRatingDto {
-  // ret_bodyが文字列の場合はパースする
-  const ret_body = typeof response.ret_body === 'string'
-    ? JSON.parse(response.ret_body)
-    : response.ret_body;
-
-  return {
-    success: response.ret_code === 0,
-    code: response.ret_code,
-    data: {
-      itemScore: ret_body.item_score,
-      itemCompareValue: ret_body.item_compare_value,
-      itemCompareDirection: ret_body.item_compare_direction,
-      itemScoreDescription: ret_body.item_score_description,
-      serviceScore: ret_body.service_score,
-      serviceCompareValue: ret_body.service_compare_value,
-      serviceCompareDirection: ret_body.service_compare_direction,
-      serviceScoreDescription: ret_body.service_score_description,
-      deliveryScore: ret_body.delivery_score,
-      deliveryCompareValue: ret_body.delivery_compare_value,
-      deliveryCompareDirection: ret_body.delivery_compare_direction,
-      deliveryScoreDescription: ret_body.delivery_score_description,
-      sellerGoodRate: ret_body.seller_good_rate,
-      sellerCredit: ret_body.seller_credit,
-      hasDsr: ret_body.has_dsr,
-    },
-  };
-}
-
-/**
  * V28 APIレスポンスを共通DTOに変換
  */
 export function convertV28ToCommon(
   v28: Taobao1688ItemDetailResponseDto
 ): CommonTaobaoItemDto {
+  // APIがエラーレスポンスを返した場合
+  if (!v28.success) {
+    throw new Error((v28 as any).message || 'Failed to fetch item data');
+  }
+
+  if (!v28.data) {
+    throw new Error('Invalid v28 response: data is missing');
+  }
+
   const skus: CommonSkuItem[] =
     v28.data.skus?.sku.map((sku) => {
       const properties: PropertyOption[] = [];

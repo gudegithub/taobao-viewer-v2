@@ -16,7 +16,7 @@
 
 import type { Route } from './+types/product.$id';
 import { useNavigation } from 'react-router';
-import { getTaobaoApiService } from '~/services/config.server';
+import { getTaobaoApiService, fetchItemDetailWithFallback, getSellerRatingService, type ApiProvider } from '~/services/config.server';
 import { ProductDetail } from '~/components/ProductDetail';
 import { ProductDetailSkeleton } from '~/components/ProductDetailSkeleton';
 
@@ -35,6 +35,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const site = (url.searchParams.get('site') as 'taobao' | '1688') || 'taobao';
   const apiVersion = url.searchParams.get('apiVersion') || 'v18';
+  const apiProvider = (url.searchParams.get('apiProvider') as ApiProvider) || 'legacy';
   const itemId = params.id;
 
   if (!itemId) {
@@ -42,18 +43,31 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   }
 
   try {
-    const taobaoApi = getTaobaoApiService(apiVersion);
     let productData;
 
-    try {
-      productData = await taobaoApi.fetchItemDetail(itemId, site);
-    } catch (error) {
-      // API returns error response (e.g., "Item not available")
-      console.error('API error:', error);
-      throw new Response('商品が見つかりませんでした。商品が削除されたか、IDが間違っている可能性があります。', {
-        status: 404,
-        statusText: 'Item Not Found'
-      });
+    // Use Auto mode if selected
+    if (apiProvider === 'auto') {
+      try {
+        productData = await fetchItemDetailWithFallback(itemId, site);
+      } catch (error) {
+        console.error('Auto mode failed:', error);
+        throw new Response('すべてのAPIで商品データの取得に失敗しました', {
+          status: 404,
+          statusText: 'All APIs Failed'
+        });
+      }
+    } else {
+      // Use specific API provider
+      const taobaoApi = getTaobaoApiService(apiVersion, apiProvider);
+      try {
+        productData = await taobaoApi.fetchItemDetail(itemId, site);
+      } catch (error) {
+        console.error('API error:', error);
+        throw new Response('商品が見つかりませんでした。商品が削除されたか、IDが間違っている可能性があります。', {
+          status: 404,
+          statusText: 'Item Not Found'
+        });
+      }
     }
 
     if (!productData.success) {
@@ -65,8 +79,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     let sellerRating = null;
     // if (productData.data.merchantId) {
     //   try {
-    //     sellerRating = await taobaoApi.fetchSellerRating(
-    //       productData.data.merchantId
+    //     const sellerRatingService = getSellerRatingService();
+    //     sellerRating = await sellerRatingService.fetchSellerRating(
+    //       productData.data.merchantId,
+    //       site
     //     );
     //   } catch (error) {
     //     console.error('Failed to fetch seller rating:', error);
@@ -79,6 +95,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     };
   } catch (error) {
     console.error('Failed to fetch product:', error);
+    if (error instanceof Response) {
+      throw error;
+    }
     throw new Response('商品データの取得中にエラーが発生しました', {
       status: 500,
     });
