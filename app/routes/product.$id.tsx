@@ -15,10 +15,11 @@
  */
 
 import type { Route } from './+types/product.$id';
-import { useNavigation } from 'react-router';
+import { redirect, useNavigation } from 'react-router';
 import { getTaobaoApiService, fetchItemDetailWithFallback, type ApiProvider } from '~/services/config.server';
 import { ProductDetail } from '~/components/ProductDetail';
 import { ProductDetailSkeleton } from '~/components/ProductDetailSkeleton';
+import { extractItemId } from '~/utils/url-extractor';
 
 export function meta({ data }: Route.MetaArgs) {
   if (!data || !data.success) {
@@ -29,6 +30,24 @@ export function meta({ data }: Route.MetaArgs) {
     { title: `${data.data.title} - Taobao Viewer` },
     { name: 'description', content: data.data.title },
   ];
+}
+
+export async function action({ request }: Route.ActionArgs) {
+  const formData = await request.formData();
+  const url = formData.get('url');
+  const apiProvider = formData.get('apiProvider') || 'auto';
+
+  if (typeof url !== 'string' || !url.trim()) {
+    return redirect('/');
+  }
+
+  const extracted = extractItemId(url.trim());
+
+  if (!extracted) {
+    return redirect('/');
+  }
+
+  return redirect(`/product/${extracted.id}?site=${extracted.site}&apiProvider=${apiProvider}`);
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {
