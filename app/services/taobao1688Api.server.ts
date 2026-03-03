@@ -16,6 +16,7 @@
 
 import { RapidApiService, type RapidApiRequestDto } from './rapidApi.server';
 import { convertShopDsrInfoToCommon } from './sellerRating.server';
+import { ensureProtocol } from './urlUtils.server';
 import type {
   V18ItemDetailResponseDto,
   V40ItemDetailResponseDto,
@@ -52,7 +53,7 @@ export function convertV18ToCommon(
   if (info.imgString) {
     const imgMatches = info.imgString.matchAll(/src="([^"]+)"/g);
     for (const match of imgMatches) {
-      images.push({ url: match[1].replace('_80x80.jpg', '') });
+      images.push({ url: ensureProtocol(match[1].replace('_80x80.jpg', '')) });
     }
   }
 
@@ -101,7 +102,7 @@ export function convertV18ToCommon(
       url: info.detail_url,
       merchantName: info.nick,
       merchantId: info.bizinfo?.sid || '',
-      mainImageUrl: info.pic_url,
+      mainImageUrl: ensureProtocol(info.pic_url),
       images,
       description: info.desc,
       minOrderQuantity: info.minNumber || 1,
@@ -145,7 +146,7 @@ export function convertV40ToCommon(
       originalPrice: sku.originalPrice || sku.price,
       stock: sku.stock,
       properties,
-      imageUrl: sku.skuAttr[0]?.enumImageUrl || '',
+      imageUrl: sku.skuAttr[0]?.enumImageUrl ? ensureProtocol(sku.skuAttr[0].enumImageUrl) : '',
     };
   });
 
@@ -160,8 +161,8 @@ export function convertV40ToCommon(
       url: v40.data.detailUrl,
       merchantName: v40.data.shopName,
       merchantId: v40.data.shopId,
-      mainImageUrl: v40.data.mainImg,
-      images: v40.data.imageList.map((url) => ({ url })),
+      mainImageUrl: ensureProtocol(v40.data.mainImg),
+      images: v40.data.imageList.map((url) => ({ url: ensureProtocol(url) })),
       description: v40.data.description,
       minOrderQuantity: v40.data.startQuantity || 1,
       totalStock,
@@ -239,8 +240,8 @@ export function convertV28ToCommon(
       url: v28.data.detail_url,
       merchantName,
       merchantId,
-      mainImageUrl: v28.data.pic_url,
-      images: v28.data.item_imgs?.map((img) => ({ url: img.url })) || [],
+      mainImageUrl: ensureProtocol(v28.data.pic_url),
+      images: v28.data.item_imgs?.map((img) => ({ url: ensureProtocol(img.url) })) || [],
       description: v28.data.desc,
       minOrderQuantity: v28.data.min_num,
       totalStock: v28.data.num,

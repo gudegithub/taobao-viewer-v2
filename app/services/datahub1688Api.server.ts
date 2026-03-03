@@ -5,6 +5,7 @@
  */
 
 import { RapidApiService } from './rapidApi.server';
+import { ensureProtocol } from './urlUtils.server';
 import type {
   CommonTaobaoItemDto,
   CommonSkuItem,
@@ -107,16 +108,6 @@ export interface DataHub1688Seller {
     score: number;
     level: string;
   }>;
-}
-
-/**
- * Ensure URL has protocol prefix
- */
-function ensureProtocol(url: string): string {
-  if (url.startsWith('//')) {
-    return `https:${url}`;
-  }
-  return url;
 }
 
 /**

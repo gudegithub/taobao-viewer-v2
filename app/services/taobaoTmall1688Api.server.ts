@@ -4,6 +4,7 @@
  */
 
 import { RapidApiService } from './rapidApi.server';
+import { ensureProtocol } from './urlUtils.server';
 import type { CommonTaobaoItemDto } from '../types/common.dto';
 
 /**
@@ -74,8 +75,8 @@ export function convertTmall1688ToCommon(
 
   // Process images
   const images = item.item_imgs && item.item_imgs.length > 0
-    ? item.item_imgs
-    : [{ url: item.pic_url }];
+    ? item.item_imgs.map((img) => ({ url: ensureProtocol(img.url) }))
+    : [{ url: ensureProtocol(item.pic_url) }];
 
   return {
     success: true,
@@ -86,7 +87,7 @@ export function convertTmall1688ToCommon(
       url: item.detail_url,
       merchantName: item.shop_name || '',
       merchantId: '',
-      mainImageUrl: item.pic_url,
+      mainImageUrl: ensureProtocol(item.pic_url),
       images,
       description: '',
       minOrderQuantity: 1,
