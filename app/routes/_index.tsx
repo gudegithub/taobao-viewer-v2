@@ -17,41 +17,13 @@
 import type { Route } from './+types/_index';
 import { redirect } from 'react-router';
 import { SearchBar } from '~/components/SearchBar';
+import { extractItemId } from '~/utils/url-extractor';
 
 export function meta({}: Route.MetaArgs) {
   return [
     { title: 'Taobao Viewer - 商品検索' },
     { name: 'description', content: 'タオバオ・1688商品ビューア' },
   ];
-}
-
-/**
- * Taobaoまたは1688のURLから商品IDを抽出
- */
-function extractItemId(url: string): { id: string; site: 'taobao' | '1688' } | null {
-  try {
-    const urlObj = new URL(url);
-
-    // Taobao: https://item.taobao.com/item.htm?id=123456789
-    if (urlObj.hostname.includes('taobao.com')) {
-      const id = urlObj.searchParams.get('id');
-      if (id) {
-        return { id, site: 'taobao' };
-      }
-    }
-
-    // 1688: https://detail.1688.com/offer/123456789.html
-    if (urlObj.hostname.includes('1688.com')) {
-      const match = urlObj.pathname.match(/\/offer\/(\d+)\.html/);
-      if (match && match[1]) {
-        return { id: match[1], site: '1688' };
-      }
-    }
-
-    return null;
-  } catch (error) {
-    return null;
-  }
 }
 
 export async function action({ request }: Route.ActionArgs) {
