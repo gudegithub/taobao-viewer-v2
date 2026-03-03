@@ -4,6 +4,7 @@
  */
 
 import { RapidApiService } from './rapidApi.server';
+import { ensureProtocol } from './urlUtils.server';
 import type { CommonTaobaoItemDto } from '../types/common.dto';
 
 /**
@@ -81,7 +82,9 @@ export function convertDataHubToCommon(
   const totalStock = skus.reduce((sum, sku) => sum + sku.stock, 0) || data.stock || 0;
 
   // Process images
-  const images = data.images || [{ url: data.pic_url }];
+  const images = data.images
+    ? data.images.map((img) => ({ url: ensureProtocol(img.url) }))
+    : [{ url: ensureProtocol(data.pic_url) }];
 
   return {
     success: true,
@@ -92,7 +95,7 @@ export function convertDataHubToCommon(
       url: data.detail_url,
       merchantName: data.seller_name || '',
       merchantId: data.seller_id || '',
-      mainImageUrl: data.pic_url,
+      mainImageUrl: ensureProtocol(data.pic_url),
       images,
       description: data.description || '',
       minOrderQuantity: data.min_order_quantity || 1,
