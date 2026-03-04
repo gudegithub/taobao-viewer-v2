@@ -33,7 +33,7 @@ export function Header() {
         </Link>
 
         {/* Search Bar */}
-        <Form method="post" action="/" className="flex-1 max-w-2xl">
+        <Form method="post" action="/?index" className="flex-1 max-w-2xl">
           <div className="flex gap-2">
             <Input
               name="url"
