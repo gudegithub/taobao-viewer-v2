@@ -174,6 +174,7 @@ export function ProductDetail({
                 src={product.data.images[currentImageIndex]?.url || product.data.mainImageUrl}
                 alt={product.data.title}
                 className="w-full h-full object-contain"
+                referrerPolicy="no-referrer"
               />
             </div>
             {product.data.images.length > 1 && (
@@ -192,6 +193,7 @@ export function ProductDetail({
                       src={image.url}
                       alt={`${product.data.title} - ${index + 1}`}
                       className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
                     />
                   </button>
                 ))}
